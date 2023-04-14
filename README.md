@@ -2,4 +2,8 @@
 
 Click on the home link below to see the list of pages.
 
-[Home](pages/Home.md)
+
+## List of pages
+- [Home](pages/Home.md)
+
+
