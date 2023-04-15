@@ -8,23 +8,20 @@
 
 - [Link to O'Reilly video course](https://learning.oreilly.com/videos/i-logs/9781491908310/)
 - Author : Jay Kreps
-- Year : 2014
+- Publication Date : June 2014
 
 ## What is Data Integration ?
 
-Data integration and ETL is boring.
+While working at LinkedIn, realised the importance of getting data into the systems both real-time and batch (Hadoop) to be able to do analytics.
 
-Working at LinkedIn.
-
-Get data into good data processing systems. Both real-time and batch (Hadoop).
-
-Maslows's hierarchy of needs.
+An analogy with Maslows's hierarchy of needs where data acquisition is at the bottom of the pyramid.
 
 ```mermaid
 
-
 flowchart  LR
 
+subgraph "Maslow's hierarchy of needs :: Data Integration needs"
+    direction LR
     subgraph 1
         A[Automation]
 
@@ -39,37 +36,36 @@ flowchart  LR
     end
 
     subgraph 4
-        AC[Acquisition Collection]
+        AC[Acquisition / Collection]
     end
 
     4 --> 3
     3 --> 2
     2 --> 1
+end
 
 ```
 
-Data infrastructures like Hadoop cluster is only as good as the data it gets. FTP data around.
+Data infrastructures like Hadoop cluster is only as good as the data it gets. FTPing files was the most common way to move data around.
 
 Why is this a hard problem?
 
+Two reasons :
+
 1. Type of data has changed in the last 10 - 15 years. Rather than transactional data, you now have event data - user activity data.
-2. Specialise databases rather than general purpose relational databases. For example key value or monitoring, search etc.
+2. Specialist databases are used rather than general purpose relational databases. For example key value or monitoring, search etc.
 
 How easy is it to get this data?
 
-Started with Hadoop at LinkedIn.
-Did not have data in that cluster.
-More time spent on getting data into the cluster than doing analytics.
+While working on Hadoop at LinkedIn, noticed that there was not a lot of data in the cluster and more time was spent on getting data into the cluster than doing analytics.
 
-Data becomes a basis of everything. It can lead to something unexpected.
+Data becomes a basis of everything. It can lead to insights, so it's important, and hence it's captured in different systems.
 
-Custom capturing for several different sources, this is repeated, built in an adhoc manner. This leads to N2 pipeline.
+However, this is captured in a custom way from several different sources and these capturing is repeated and in is built in an adhoc manner. This leads to N2 squared problem.
 
-Verify data before capture as it remains forever.
+There is a need to verify data before capture as it remains in the system forever and apply a centralised approach to data capture based around a date time log.
 
-Centralised approach to data capture based around a datatime log.
-
-Large data integration problem as related to logs.
+Large data integration problem can be solved by using the concept of the logs.
 
 ## What is Apache Kafka ?
 
@@ -110,31 +106,29 @@ end
 
 ```
 
-These are real-time.
-Each stage is distributed.
-Implementation is architectural different from traditional messaging systems.
+Events flow into and out of Kafka in real-time and each elements the above diagram is distributed.
 
-Amazon Kinesis is very similar to Kafka and possibly inspired by it.
+This looks like a traditional pub/sub messaging, however, the implementation is architectural different from traditional messaging systems.
 
-First project was DynamoDB derivation, but now Amazon has cloned Kinesis. There are now two systems!
+Amazon Kinesis is very similar to Kafka, it came later and is possibly inspired by it. So it gives a validation to the fundamental idea behind Kafka.
 
-Both are very similar. Amazon Kinesis is hosted by Amazon whereas Kafka you have to host yourself.
+Jay Kreps is thrilled as his first project was a DynamoDB derivation, and now  Amazon has cloned Kafka! Both are very similar. Amazon Kinesis is hosted by Amazon whereas Kafka you have to host yourself.
 
 Can this be solved in Infrastructure?
 
-Each pipleline solved a different problem.
+Each pipeline solved a different problem.
 
-- database copied was different to ETL data.
+- database copies were different to ETL data.
 - Active MQ ingestion was different.
 
-A system was required to solve all these problems.
+A common system was required to solve all these problems.
 
 Tried using Active MQ, it didn't work as it was not build for high-throughput, logging or event data like page view events. Data not persistent for longer periods for example if Hadoop cluster is down. It would need something like 300 active brokers!! 300 logging brokers for 300 machines is not tenable!
 
 ETL was done with files, messaging with messages.
 There was a huge difference between the two.
 
-Came up with
+This lead to the following 3 design principles:
 
 ### 3 design principles:
 
@@ -144,9 +138,9 @@ Came up with
 
 Message Brokers hold on to data and do not do any processing on it.
 
-Hadoopp is doing something higer level, in addition to HDFS, it allows map reduce and other processing.
+Hadoop is doing something higher level, in addition to HDFS, it allows map reduce and other processing.
 
-One of the key characteristics should allow stream processing in a rich way.
+Should allow stream processing in a rich way.
 
 **3. Clusters not servers**
 
@@ -159,11 +153,12 @@ True of HDFS. Processing of files across machines. Not true of individual messag
 - Hundreds of MB/sec/server throughput. (Logging/ log copying)
 - Many TB per server.
 
-**Gaurantees of database**
+**Guarantees of a database**
 
 - Messages are strictly ordered
-- All data is persitent
-  **Distributed by default**
+- All data is persistent
+  
+**Distributed by default**
 - Replication -> individual machines can fail without losing data
 - Partitioning model -> scale by adding more machines
 
@@ -187,10 +182,7 @@ See
 
 ## Logs and Distributed Systems
 
-Different way of thinking about data.
-Database provides tables, Kafka provides logs.
-
-Particular thing in mind when thinking about logs. Not the server logs.
+It's a different way of thinking about data, while database provides tables, Kafka provides logs. Think of it differently than server logs though.
 
 - It's append only as a regular log.
 - Structured array of feed of messages
@@ -220,12 +212,10 @@ flowchart TD
 
 ```
 
-Provides a data. A log centric systems.
-
 If you partition it, you get the Kafka data model.
 
 ```mermaid
-flowchart
+flowchart LR
         FA[First Record]
         0A[0]
         1A[1]
@@ -248,7 +238,7 @@ flowchart
         LC[Next record when written]
         LB[Next record when written]
 
-    subgraph "PP"
+    subgraph "Multiple Partitions"
 
         subgraph Partition0
             direction LR
@@ -279,9 +269,9 @@ flowchart
 
 ```
 
-Topic is a category of data, for example page views, searches. Each of these is partitioned by say user id. Each partition is a sequence of records that are being contiously appended to. Maintained for a week or so.
+Topic is a category of data, for example page views, searches. Each of these is partitioned by say user id. Each partition is a sequence of records that are being continuously  appended to. Maintained for a week or so.
 
-How is this a a messaging system, it's like Apache log?
+How is this a a messaging system, it's like an Apache log?
 Logs are fantastic mechanism for implementing a publish subscribe system.
 
 ```mermaid
@@ -296,10 +286,10 @@ flowchart TD
     subgraph Datasource
         DS
     end
-    subgraph DestinationB
+    subgraph Destination B
         DB
     end
-    subgraph DestinationA
+    subgraph Destination A
         DA
     end
 
@@ -316,7 +306,7 @@ flowchart TD
 ```
 
 All subscribers see the same sequence of data.
-In messaging not all consumers see the same data?!
+In messaging not all consumers see the same data! (Possibly had point-to-point messaging in mind)
 
 Log sequence number acts as a proxy of time. A record that comes after another record in the log is newer.
 
@@ -368,6 +358,11 @@ flowchart TD
         DS --> |Writes | 4
 
     end
+
+    subgraph Final State
+      M1[Microsoft, Satya Nadella]
+      A1[Apple, Jobs]
+    end
 ```
 
 There are two design styles
@@ -416,8 +411,7 @@ Traditionally you have two solutions
 
 A processing layer will run in real time.
 
-Think of all your data a big distributed database. Kafka is like a commit log for that database.
-
+Think of all your data as a big distributed database. Kafka is like a commit log for that database.
 
 Stream processing is a trigger or a materialized view of that system.
 
@@ -427,17 +421,17 @@ Different from map reduce as it's real time processing.
 
 Next evolution of message processing.
 
-Stream processing gives richer semantics which a messaging system doesn't
+Stream processing gives richer semantics which a messaging system doesn't.
 
 Stream processing is no longer niche. 
 
-Different between a batch process and a stream process.
+### Difference between a batch process and a stream process.
 
 Think of US Census. Actually every 10 years, somebody goes to each house and counts the number of people. That is batch processing.
 
 Easier way would be to have a log of all the births and deaths. This way you'll know the population at any point in time. You can go back in time as well. This is stream processing.
 
-Anologous example. How many people are there in the party. Send someone to check every hour. This is batch processing. Another way is to have a log of people entering and leaving the party. This is stream processing. This log will tell us at any point in time how many people are there in the party.
+[Analogous example. How many people are there in the party? Send someone to check every hour. This is batch processing. Another way is to have a log of people entering and leaving the party. This is stream processing. This log will tell us at any point in time how many people are there in the party].
 
 Stream processing is taking logs and transforming them into new logs.
 
@@ -457,9 +451,9 @@ Stream processing is a generalisation in  between the two. You take some number 
 There is no end of the stream. It's a continuous stream. But's that true for all data. Batch jobs only take a arbitrary subset of the time. It's better to have a control over the time, especially for domains that are low latency.
 
 At LinkedIn
-50 % - Request-Response
-25 % - Batch
-25 % - Stream - low latency, asynchronous processing  (not well supported now)
+- 50 % - Request-Response
+- 25 % - Batch
+- 25 % - Stream - low latency, asynchronous processing  (not well supported now)
 
 Examples of stream processing
 
@@ -473,7 +467,7 @@ Examples of stream processing
 Samza and Storm make use of Kafka.
 
 
-Samz architecture
+Samza architecture
 
 ```mermaid
 flowchart
@@ -522,11 +516,5 @@ flowchart
 
     end
 
-
 ```
-
-
-
-
-
 > [Home](HOME.md)
